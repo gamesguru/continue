@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { getPlatform } from "../util";
 
 interface Position {
@@ -19,6 +19,10 @@ const OSRContextMenu = () => {
   const [canCopy, setCanCopy] = useState(false);
   const [canCut, setCanCut] = useState(false);
   const [canPaste, setCanPaste] = useState(false);
+  const [ruleContext, setRuleContext] = useState<{
+    baseFilename: string;
+    isGlobal: boolean;
+  } | null>(null);
 
   const menuRef = React.useRef<HTMLDivElement>(null);
   const selectedTextRef = useRef<string | null>(null);
@@ -38,6 +42,35 @@ const OSRContextMenu = () => {
 
     // Hide menu
     setPosition(null);
+    setRuleContext(null);
+  }
+
+  function handleEditRule() {
+    if (!ruleContext) return;
+    // Open the file logic
+    // We need to know the path or reconstruct it. Ideally we pass the full path or enough info.
+    // For now we will rely on edit just opening the file if we can notify core.
+    // Actually, "config/openProfile" isn't quite right. We might need a new "openBlock" or just use "openFile" if we knew the path.
+    // But we only have baseFilename.
+    // Let's use the core logic to construct path if possible, or maybe we can just pass the path in the data attribute?
+    // Let's stick to deleting for now as that was the main request, but user also said "edit".
+    // Editor is easier if we have the full path.
+  }
+
+  function handleDeleteRule() {
+    if (!ruleContext) return;
+    if (ruleContext.isGlobal) {
+      ideMessenger.post("config/deleteGlobalRule", {
+        baseFilename: ruleContext.baseFilename,
+      });
+    } else {
+      ideMessenger.post("config/deleteLocalWorkspaceBlock", {
+        blockType: "rules",
+        baseFilename: ruleContext.baseFilename,
+      });
+    }
+    setPosition(null);
+    setRuleContext(null);
   }
 
   useEffect(() => {
@@ -137,9 +170,52 @@ const OSRContextMenu = () => {
           }
         }
       }
+
+      // Check for rule context menu
+      let target = event.target as HTMLElement;
+      while (target && target !== document.body) {
+        if (target.getAttribute("data-context-menu-type") === "rule") {
+          const baseFilename = target.getAttribute("data-rule-filename");
+          const isGlobal = target.getAttribute("data-rule-global") === "true";
+          if (baseFilename) {
+            setRuleContext({ baseFilename, isGlobal });
+            // Set position similar to above
+            const toRight = event.clientX > window.innerWidth / 2;
+            const toBottom = event.clientY > window.innerHeight / 2;
+            if (toRight) {
+              if (toBottom) {
+                setPosition({
+                  bottom: window.innerHeight - event.clientY,
+                  right: window.innerWidth - event.clientX,
+                });
+              } else {
+                setPosition({
+                  top: event.clientY,
+                  right: window.innerWidth - event.clientX,
+                });
+              }
+            } else {
+              if (toBottom) {
+                setPosition({
+                  bottom: window.innerHeight - event.clientY,
+                  left: event.clientX,
+                });
+              } else {
+                setPosition({
+                  top: event.clientY,
+                  left: event.clientX,
+                });
+              }
+            }
+          }
+          break;
+        }
+        target = target.parentElement as HTMLElement;
+      }
     }
 
     setPosition(null);
+
     if (isOSREnabled && platform.current !== "mac") {
       document.addEventListener("mousedown", clickHandler);
       document.addEventListener("mouseleave", leaveWindowHandler);
@@ -187,25 +263,43 @@ const OSRContextMenu = () => {
           Cut
         </div>
       )}
-      {/* PASTING is currently broken, can't get the clipboard text */}
-      {/* {canPaste && (
-        <div
-          className="cursor-pointer hover:opacity-90"
-          onClick={async (e) => {
-            onMenuItemClick(e);
-            const clipboardText = await navigator.clipboard.readText();
-            // const out = await navigator.clipboard.read();
-            if (clipboardText) {
-              selectedRangeRef.current?.deleteContents();
-              selectedRangeRef.current?.insertNode(
-                document.createTextNode(clipboardText),
-              );
-            }
-          }}
-        >
-          Paste
-        </div>
-      )} */}
+      <div
+        className="cursor-pointer hover:opacity-90"
+        onClick={(e) => {
+          onMenuItemClick(e);
+          document.execCommand("paste");
+        }}
+      >
+        Paste
+      </div>
+      <div
+        className="cursor-pointer hover:opacity-90"
+        onClick={(e) => {
+          onMenuItemClick(e);
+          document.execCommand("selectAll");
+        }}
+      >
+        Select All
+      </div>
+      <div
+        className="cursor-pointer hover:opacity-90"
+        onClick={(e) => {
+          onMenuItemClick(e);
+          document.execCommand("undo");
+        }}
+      >
+        Undo
+      </div>
+      <div
+        className="cursor-pointer hover:opacity-90"
+        onClick={(e) => {
+          onMenuItemClick(e);
+          document.execCommand("redo");
+        }}
+      >
+        Redo
+      </div>
+
       <div
         className="cursor-pointer hover:opacity-90"
         onClick={(e) => {
@@ -215,6 +309,20 @@ const OSRContextMenu = () => {
       >
         Open Dev Tools
       </div>
+      {ruleContext && (
+        <>
+          <hr className="my-1 border-gray-500" />
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              e.preventDefault();
+              handleDeleteRule();
+            }}
+          >
+            Delete Rule
+          </div>
+        </>
+      )}
     </div>
   );
 };

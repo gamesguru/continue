@@ -58,7 +58,8 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
-import { useAutoScroll } from "./useAutoScroll";
+// import { useAutoScroll } from "./useAutoScroll";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -119,7 +120,34 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
-  const history = useAppSelector((state) => state.session.history);
+  const sessionHistory = useAppSelector((state) => state.session.history);
+
+  // Stress Test Logic
+  const [isStressTest, setIsStressTest] = useState(false);
+  const history = useMemo(() => {
+    if (!isStressTest) return sessionHistory;
+    const dummyItems: ChatHistoryItemWithMessageId[] = Array.from({
+      length: 5000,
+    }).map((_, i) => {
+      const role = i % 2 === 0 ? "user" : "assistant";
+      const paragraphs = [
+        `This is dummy message #${i}. It is designed to be a significantly larger message to test the performance of the virtualized list. When rendering thousands of items, the height of each item can vary, especially with multi-line content like this paragraph.`,
+        `The second paragraph for message #${i} adds even more vertical height. Virtualization ensures that only the messages currently in your viewport are actually rendered into the DOM, which keeps the application responsive regardless of how long the conversation thread grows. This is especially important for technical assistants where logs or code blocks can be quite long.`,
+      ];
+      return {
+        message: {
+          id: `dummy-${i}`,
+          role,
+          content: paragraphs.slice(0, (i % 2) + 1).join("\n\n"),
+        },
+        editorState: null,
+        contextItems: [],
+        appliedRules: [],
+        toolCallStates: [],
+      };
+    });
+    return [...sessionHistory, ...dummyItems];
+  }, [sessionHistory, isStressTest]);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
@@ -139,7 +167,10 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
-  useAutoScroll(stepsDivRef, history);
+  // NOTE: Disabled for now (complicates Virtuoso / DOM)
+  // useAutoScroll(stepsDivRef, history);
+
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -160,10 +191,25 @@ export function Chat() {
   }, [isStreaming, jetbrains, isInEdit]);
 
   const { widget, highlights } = useFindWidget(
+    virtuosoRef,
     stepsDivRef,
     tabsRef,
+    history,
     isStreaming,
   );
+
+  // Force scroll to bottom on initial load
+  useEffect(() => {
+    if (history.length > 0 && virtuosoRef.current) {
+      // slight timeout to let virtuoso measure items
+      setTimeout(() => {
+        virtuosoRef.current?.scrollToIndex({
+          index: history.length - 1,
+          align: "end",
+        });
+      }, 100);
+    }
+  }, [virtuosoRef.current]); // Only run when ref attaches initially (and history exists)
 
   const sendInput = useCallback(
     (
@@ -431,7 +477,12 @@ export function Chat() {
     [sendInput, isLastUserInput, history, stepsOpen, isStreaming],
   );
 
-  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? true;
+
+  const filteredHistory = useMemo(
+    () => history.filter((item) => item.message.role !== "system"),
+    [history],
+  );
 
   return (
     <>
@@ -440,16 +491,28 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`pt-[8px] ${history.length > 0 ? "flex-1" : ""}`}
       >
-        {highlights}
-        {history
-          .filter((item) => item.message.role !== "system")
-          .map((item, index: number) => (
+        <div className="absolute right-0 top-0 z-50 p-2 opacity-50 hover:opacity-100">
+          <button
+            onClick={() => setIsStressTest(!isStressTest)}
+            style={{ fontSize: "10px", background: "red", color: "white" }}
+          >
+            {isStressTest
+              ? "Disable Stress Test"
+              : "Enable Stress Test (5k items)"}
+          </button>
+        </div>
+        <Virtuoso
+          ref={virtuosoRef}
+          data={filteredHistory}
+          initialTopMostItemIndex={filteredHistory.length - 1}
+          computeItemKey={(index, item) => item.message.id}
+          itemContent={(index, item) => (
             <div
               key={item.message.id}
               style={{
-                minHeight: index === history.length - 1 ? "200px" : 0,
+                minHeight: index === filteredHistory.length - 1 ? "200px" : 0,
               }}
             >
               <ErrorBoundary
@@ -462,7 +525,24 @@ export function Chat() {
               </ErrorBoundary>
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>
-          ))}
+          )}
+          followOutput={(isAtBottom) => {
+            const lastItem = history[history.length - 1];
+            if (!lastItem || lastItem.message.role === "user") {
+              return false; // Don't auto-scroll for user messages, let them scroll if they want? Or maybe 'smart'
+            }
+            // If we are streaming (assistant is responding), we want to follow.
+            // But we also want to respect if the user scrolled up.
+            // 'auto' behavior in Virtuoso: if at bottom, stay at bottom. if scrolled up, stay there.
+            return "auto";
+          }}
+          className={
+            showScrollbar
+              ? "thin-scrollbar overflow-y-scroll"
+              : "no-scrollbar overflow-y-scroll"
+          }
+        />
+        {highlights}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox

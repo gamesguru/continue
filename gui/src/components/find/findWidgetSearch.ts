@@ -7,8 +7,9 @@ export interface Rectangle {
 
 export interface SearchMatch {
   index: number;
-  textNode: Text;
-  overlayRectangle: Rectangle;
+  textNode?: Text;
+  overlayRectangle?: Rectangle;
+  messageIndex?: number; // Index in the history array
 }
 
 interface SearchOptions {
@@ -132,6 +133,7 @@ export const searchWithinContainer = (
   let closestDist = Infinity;
   let closestMatchToMiddle: SearchMatch | null = null;
   filteredMatches.forEach((match) => {
+    if (!match.overlayRectangle) return;
     const dist = Math.abs(verticalMiddle - match.overlayRectangle.top);
     if (dist < closestDist) {
       closestDist = dist;
