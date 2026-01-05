@@ -122,32 +122,7 @@ export function Chat() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const sessionHistory = useAppSelector((state) => state.session.history);
 
-  // Stress Test Logic
-  const [isStressTest, setIsStressTest] = useState(false);
-  const history = useMemo(() => {
-    if (!isStressTest) return sessionHistory;
-    const dummyItems: ChatHistoryItemWithMessageId[] = Array.from({
-      length: 5000,
-    }).map((_, i) => {
-      const role = i % 2 === 0 ? "user" : "assistant";
-      const paragraphs = [
-        `This is dummy message #${i}. It is designed to be a significantly larger message to test the performance of the virtualized list. When rendering thousands of items, the height of each item can vary, especially with multi-line content like this paragraph.`,
-        `The second paragraph for message #${i} adds even more vertical height. Virtualization ensures that only the messages currently in your viewport are actually rendered into the DOM, which keeps the application responsive regardless of how long the conversation thread grows. This is especially important for technical assistants where logs or code blocks can be quite long.`,
-      ];
-      return {
-        message: {
-          id: `dummy-${i}`,
-          role,
-          content: paragraphs.slice(0, (i % 2) + 1).join("\n\n"),
-        },
-        editorState: null,
-        contextItems: [],
-        appliedRules: [],
-        toolCallStates: [],
-      };
-    });
-    return [...sessionHistory, ...dummyItems];
-  }, [sessionHistory, isStressTest]);
+  const history = sessionHistory;
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
@@ -493,16 +468,6 @@ export function Chat() {
         ref={stepsDivRef}
         className={`pt-[8px] ${history.length > 0 ? "flex-1" : ""}`}
       >
-        <div className="absolute right-0 top-0 z-50 p-2 opacity-50 hover:opacity-100">
-          <button
-            onClick={() => setIsStressTest(!isStressTest)}
-            style={{ fontSize: "10px", background: "red", color: "white" }}
-          >
-            {isStressTest
-              ? "Disable Stress Test"
-              : "Enable Stress Test (5k items)"}
-          </button>
-        </div>
         <Virtuoso
           ref={virtuosoRef}
           data={filteredHistory}
