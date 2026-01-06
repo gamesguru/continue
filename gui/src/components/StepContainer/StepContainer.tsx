@@ -16,10 +16,23 @@ interface StepContainerProps {
   index: number;
   isLast: boolean;
   latestSummaryIndex?: number;
+  searchState?: {
+    searchTerm: string;
+    caseSensitive: boolean;
+    useRegex: boolean;
+  };
 }
 
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
+  // ... (omitted unchanged lines, waiting for context matching)
+
+  <StyledMarkdownPreview
+    isRenderingInStepContainer
+    source={stripImages(props.item.message.content)}
+    itemIndex={props.index}
+    searchState={props.searchState}
+  />;
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const uiConfig = useAppSelector(selectUIConfig);
@@ -98,6 +111,7 @@ export default function StepContainer(props: StepContainerProps) {
               isRenderingInStepContainer
               source={stripImages(props.item.message.content)}
               itemIndex={props.index}
+              searchState={props.searchState}
             />
           </>
         )}

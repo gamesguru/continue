@@ -15,37 +15,9 @@ import { VirtuosoHandle } from "react-virtuoso";
 import { HeaderButton, Input } from "..";
 import { ChatHistoryItemWithMessageId } from "../../redux/slices/sessionSlice";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import {
-  Rectangle,
-  SearchMatch,
-  searchWithinContainer,
-} from "./findWidgetSearch";
+import { SearchMatch } from "./findWidgetSearch";
 import { useDebounceValue } from "./useDebounce";
 import { useElementSize } from "./useElementSize";
-
-interface HighlightOverlayProps {
-  rectangle: Rectangle;
-  isCurrent: boolean;
-}
-
-const HighlightOverlay = (props: HighlightOverlayProps) => {
-  const { top, left, width, height } = props.rectangle;
-  return (
-    <div
-      className={props.isCurrent ? "bg-findMatch-selected" : "bg-findMatch"}
-      key={`highlight-${top}-${left}`}
-      style={{
-        position: "absolute",
-        top,
-        left,
-        width,
-        height,
-        pointerEvents: "none", // To click through the overlay
-        zIndex: 10,
-      }}
-    />
-  );
-};
 
 type ScrollToMatchOption = "closest" | "first" | "none";
 
@@ -154,19 +126,6 @@ export const useFindWidget = (
     return containerResizing || headerResizing;
   }, [containerResizing, headerResizing]);
 
-  // Visual highlights for currently visible items
-  const [visibleHighlights, setVisibleHighlights] = useState<SearchMatch[]>([]);
-
-  // Update visible highlights when scrolling or content changes
-  const updateHighlights = useCallback(() => {
-    const { results } = searchWithinContainer(searchRef, searchTerm, {
-      caseSensitive,
-      useRegex,
-      offsetHeight: headerHeight,
-    });
-    setVisibleHighlights(results);
-  }, [searchRef, searchTerm, caseSensitive, useRegex, headerHeight]);
-
   // Track previous search term to determine if we should scroll
   const prevSearchTerm = useRef<string>("");
 
@@ -211,15 +170,12 @@ export const useFindWidget = (
     setMatches(results);
 
     // Determine scrolling behavior
-    // 1. If search term changed, scroll to first match
-    // 2. If search term matches previous, try to preserve current match
     if (searchTerm !== prevSearchTerm.current) {
       prevSearchTerm.current = searchTerm;
       if (results.length > 0) {
         scrollToMatch(results[0]);
       }
     } else {
-      // Preserve current match if possible
       if (currentMatch) {
         const matchingResult = results.find(
           (r) =>
@@ -237,10 +193,6 @@ export const useFindWidget = (
         setCurrentMatch(results[0]);
       }
     }
-
-    // Always update highlights after search refresh
-    // setTimeout to allow DOM to settle if needed (though Virtuoso usually handles this)
-    setTimeout(updateHighlights, 0);
   }, [
     searchTerm,
     caseSensitive,
@@ -248,7 +200,6 @@ export const useFindWidget = (
     history,
     scrollToMatch,
     currentMatch,
-    updateHighlights,
   ]);
 
   // Run search when dependencies change
@@ -259,20 +210,6 @@ export const useFindWidget = (
       refreshSearch();
     }
   }, [refreshSearch, open, disabled]);
-
-  // Clicks in search div can cause content changes that for some reason don't trigger resize
-  // Refresh clicking within container
-  useEffect(() => {
-    const searchContainer = searchRef.current;
-    if (!open || !searchContainer) return;
-    const handleSearchRefClick = () => {
-      updateHighlights();
-    };
-    searchContainer.addEventListener("click", handleSearchRefClick);
-    return () => {
-      searchContainer.removeEventListener("click", handleSearchRefClick);
-    };
-  }, [searchRef, updateHighlights, open]);
 
   // Find widget component
   const widget = (
@@ -348,19 +285,12 @@ export const useFindWidget = (
     </div>
   );
 
-  // Generate the highlight overlay elements
-  const highlights = useMemo(() => {
-    return visibleHighlights.map((match) => (
-      <HighlightOverlay
-        rectangle={match.overlayRectangle!}
-        isCurrent={false} // We don't easily track current *visual* match to *logical* match yet
-      />
-    ));
-  }, [visibleHighlights]);
-
   return {
-    highlights,
     widget,
-    runHighlightUpdate: updateHighlights,
+    searchState: {
+      searchTerm: open ? searchTerm : "", // Only highlight if open
+      caseSensitive,
+      useRegex,
+    },
   };
 };

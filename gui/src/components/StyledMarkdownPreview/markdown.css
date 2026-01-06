@@ -1041,3 +1041,13 @@ body[data-color-mode*="light"] {
 .mermaid foreignObject {
   width: 100%;
 }
+
+.wmde-markdown mark.find-match {
+  background-color: rgba(255, 215, 0, 0.5);
+  background-color: var(
+    --vscode-editor-findMatchHighlight-background,
+    rgba(255, 215, 0, 0.5)
+  );
+  color: inherit;
+  padding: 0 1px;
+}

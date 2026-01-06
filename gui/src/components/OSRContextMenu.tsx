@@ -308,24 +308,28 @@ const OSRContextMenu = () => {
       >
         Select All
       </div>
-      <div
-        className="cursor-pointer hover:opacity-90"
-        onClick={(e) => {
-          onMenuItemClick(e);
-          document.execCommand("undo");
-        }}
-      >
-        Undo
-      </div>
-      <div
-        className="cursor-pointer hover:opacity-90"
-        onClick={(e) => {
-          onMenuItemClick(e);
-          document.execCommand("redo");
-        }}
-      >
-        Redo
-      </div>
+      {(canPaste || canCut) && (
+        <>
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              onMenuItemClick(e);
+              document.execCommand("undo");
+            }}
+          >
+            Undo
+          </div>
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              onMenuItemClick(e);
+              document.execCommand("redo");
+            }}
+          >
+            Redo
+          </div>
+        </>
+      )}
 
       <hr className="my-1 border-gray-500" />
       <div

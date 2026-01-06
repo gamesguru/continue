@@ -165,7 +165,7 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains, isInEdit]);
 
-  const { widget, highlights, runHighlightUpdate } = useFindWidget(
+  const { widget, searchState } = useFindWidget(
     virtuosoRef,
     stepsDivRef,
     tabsRef,
@@ -493,24 +493,24 @@ export function Chat() {
             </div>
           )}
           followOutput={(isAtBottom) => {
-            if (isStreaming) {
-              return isAtBottom ? "auto" : false;
+            if (isStreaming && isAtBottom) {
+              return "auto";
             }
             return false;
           }}
           atBottomStateChange={(isAtBottom) => {
             if (isAtBottom) {
-              // We could resume auto-scroll here if we wanted
+              // Auto-scroll logic handled by followOutput
             }
           }}
-          onScroll={(e) => runHighlightUpdate()}
+          onScroll={(e) => {}}
           className={
             showScrollbar
               ? "thin-scrollbar overflow-y-scroll"
               : "no-scrollbar overflow-y-scroll"
           }
         />
-        {highlights}
+        {/* highlights (removed) */}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox

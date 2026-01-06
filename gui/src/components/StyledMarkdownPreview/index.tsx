@@ -155,8 +155,12 @@ interface StyledMarkdownPreviewProps {
   toolCallId?: string;
   expandCodeblocks?: boolean;
   collapsible?: boolean;
+  searchState?: {
+    searchTerm: string;
+    caseSensitive: boolean;
+    useRegex: boolean;
+  };
 }
-
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
 
 function getLanguageFromClassName(className: any): string | null {
@@ -274,6 +278,74 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             node.properties = { "data-codeblockindex": codeBlockIndex };
             codeBlockIndex++;
           });
+
+          // Highlight search terms
+          if (!props.searchState?.searchTerm) return;
+          const { searchTerm, caseSensitive } = props.searchState;
+          const query = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+
+          visit(tree, "text", (node: any, index: any, parent: any) => {
+            if (!node.value || !parent) return;
+
+            // Skip if already inside a mark (to avoid recursion if we had multiple passes, though here it's one pass)
+            // Also might want to skip script/style tags if they exist (unlikely in this markdown)
+
+            const textValue = node.value;
+            const textToCheck = caseSensitive
+              ? textValue
+              : textValue.toLowerCase();
+
+            if (!textToCheck.includes(query)) return;
+
+            const newChildren: any[] = [];
+            let lastIndex = 0;
+            let matchIndex;
+
+            // Find all matches in this text node
+            while (
+              (matchIndex = textToCheck.indexOf(query, lastIndex)) !== -1
+            ) {
+              // Text before match
+              if (matchIndex > lastIndex) {
+                newChildren.push({
+                  type: "text",
+                  value: textValue.slice(lastIndex, matchIndex),
+                });
+              }
+
+              // The match itself wrapped in mark
+              newChildren.push({
+                type: "element",
+                tagName: "mark",
+                properties: { className: "find-match" }, // We will style this class
+                children: [
+                  {
+                    type: "text",
+                    value: textValue.slice(
+                      matchIndex,
+                      matchIndex + query.length,
+                    ),
+                  },
+                ],
+              });
+
+              lastIndex = matchIndex + query.length;
+            }
+
+            // Remaining text
+            if (lastIndex < textValue.length) {
+              newChildren.push({
+                type: "text",
+                value: textValue.slice(lastIndex),
+              });
+            }
+
+            // Replace the original text node with new children
+            parent.children.splice(index, 1, ...newChildren);
+
+            // Return index + newChildren.length to skip over what we just inserted
+            return index + newChildren.length;
+          });
         };
       },
       {},
@@ -376,7 +448,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // some patches to source markdown are applied here:
       fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
     );
-  }, [props.source, allSymbols]);
+  }, [props.source, allSymbols, props.searchState]);
 
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
