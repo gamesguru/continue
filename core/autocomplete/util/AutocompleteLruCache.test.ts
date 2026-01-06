@@ -7,7 +7,9 @@ jest.mock("async-mutex", () => {
     Mutex: jest.fn().mockImplementation(() => ({ acquire })),
   };
 });
-jest.mock("sqlite");
+jest.mock("sqlite", () => ({
+  open: jest.fn(),
+}));
 jest.mock("sqlite3");
 
 jest.useFakeTimers();
