@@ -1,3 +1,4 @@
+import { open } from "sqlite";
 import AutocompleteLruCache from "./AutocompleteLruCache";
 
 jest.mock("async-mutex", () => {
@@ -638,8 +639,7 @@ describe("AutocompleteLruCache", () => {
     });
 
     it("should return same instance on multiple calls", async () => {
-      const mockOpen = jest.fn().mockResolvedValue(mockDb);
-      jest.doMock("sqlite", () => ({ open: mockOpen }));
+      (open as jest.Mock).mockResolvedValue(mockDb);
 
       const instance1 = await AutocompleteLruCache.get();
       const instance2 = await AutocompleteLruCache.get();
