@@ -28,7 +28,7 @@ npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" --ignore-path .gitignore
 echo "-----------------------------------"
 echo "🧠 Checking Core (Lint, Types, Test)..."
 cd core
-npm install
+npm ci
 npx tsc --noEmit
 npm run lint
 # Skip API tests locally since we don't have secrets
@@ -41,7 +41,7 @@ cd ..
 echo "-----------------------------------"
 echo "🖥️ Checking GUI (Lint, Types, Test)..."
 cd gui
-npm install
+npm ci
 npx tsc --noEmit
 npm run lint
 npm test
@@ -51,7 +51,7 @@ cd ..
 echo "-----------------------------------"
 echo "🆚 Checking VS Code Extension (Lint, Types, Test)..."
 cd extensions/vscode
-npm install
+npm ci
 npm run write-build-timestamp
 npx tsc --noEmit
 npm run lint
