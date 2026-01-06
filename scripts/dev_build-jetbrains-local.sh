@@ -62,4 +62,10 @@ fi
 
 echo "--- Build Complete ---"
 echo "Plugin artifact located at:"
-ls -1 "$REPO_ROOT/extensions/intellij/build/distributions/continue-intellij-extension-"*.zip
+ARTIFACT_PATH=$(find "$REPO_ROOT/extensions/intellij/build/distributions" -maxdepth 1 -name "continue-intellij-extension-*.zip" -print -quit)
+echo "Plugin artifact located at: $ARTIFACT_PATH"
+
+# Link to build/ directory
+mkdir -p "$REPO_ROOT/build"
+mv "$ARTIFACT_PATH" "$REPO_ROOT/build/"
+echo "✅ Moved to: $REPO_ROOT/build/continue-intellij-extension.zip"

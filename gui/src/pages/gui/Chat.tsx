@@ -473,6 +473,7 @@ export function Chat() {
           data={filteredHistory}
           initialTopMostItemIndex={filteredHistory.length - 1}
           computeItemKey={(index, item) => item.message.id}
+          defaultItemHeight={50}
           itemContent={(index, item) => (
             <div
               key={item.message.id}
@@ -492,14 +493,10 @@ export function Chat() {
             </div>
           )}
           followOutput={(isAtBottom) => {
-            const lastItem = history[history.length - 1];
-            if (!lastItem || lastItem.message.role === "user") {
-              return false; // Don't auto-scroll for user messages, let them scroll if they want? Or maybe 'smart'
+            if (isStreaming) {
+              return isAtBottom ? "auto" : false;
             }
-            // If we are streaming (assistant is responding), we want to follow.
-            // But we also want to respect if the user scrolled up.
-            // 'auto' behavior in Virtuoso: if at bottom, stay at bottom. if scrolled up, stay there.
-            return "auto";
+            return false;
           }}
           className={
             showScrollbar

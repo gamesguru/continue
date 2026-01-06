@@ -50,4 +50,10 @@ npm run package
 
 echo "--- Build Complete ---"
 echo "VS Code extension artifact created at:"
-ls -1 build/*.vsix
+ARTIFACT_PATH=$(find build -maxdepth 1 -name "*.vsix" -print -quit)
+echo "VS Code extension artifact created at: $ARTIFACT_PATH"
+
+# Link to build/ directory
+mkdir -p "$REPO_ROOT/build"
+mv "$ARTIFACT_PATH" "$REPO_ROOT/build/"
+echo "✅ Moved to: $REPO_ROOT/build/continue-vscode-extension.vsix"

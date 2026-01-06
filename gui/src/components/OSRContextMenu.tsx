@@ -124,10 +124,19 @@ const OSRContextMenu = () => {
         let isEditable = false;
         if (
           event.target &&
-          "isContentEditable" in event.target &&
-          typeof event.target.isContentEditable === "boolean"
+          (event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            (event.target instanceof HTMLElement &&
+              event.target.isContentEditable))
         ) {
-          isEditable = event.target.isContentEditable;
+          isEditable =
+            "isContentEditable" in event.target &&
+            event.target.isContentEditable
+              ? true
+              : !(
+                  (event.target as any).readOnly ||
+                  (event.target as any).disabled
+                );
         }
 
         setCanCopy(!!selectedTextRef.current && isClickWithinSelection);
@@ -135,11 +144,8 @@ const OSRContextMenu = () => {
           !!(isEditable && selectedTextRef.current && isClickWithinSelection),
         );
 
-        // TODO only can paste if there is text in clipboard?
+        // only can paste if editable
         setCanPaste(isEditable);
-        //   navigator.clipboard.readText().then((text) => {
-        //     setCanPaste(text || null);
-        //   });
 
         // Open towards inside of window from click
         const toRight = event.clientX > window.innerWidth / 2;
@@ -263,20 +269,41 @@ const OSRContextMenu = () => {
           Cut
         </div>
       )}
+      {canPaste && (
+        <div
+          className="cursor-pointer hover:opacity-90"
+          onClick={(e) => {
+            onMenuItemClick(e);
+            document.execCommand("paste");
+          }}
+        >
+          Paste
+        </div>
+      )}
       <div
         className="cursor-pointer hover:opacity-90"
         onClick={(e) => {
           onMenuItemClick(e);
-          document.execCommand("paste");
-        }}
-      >
-        Paste
-      </div>
-      <div
-        className="cursor-pointer hover:opacity-90"
-        onClick={(e) => {
-          onMenuItemClick(e);
-          document.execCommand("selectAll");
+          // Check if we are inside a code block
+          let target = selectedRangeRef.current?.startContainer?.parentElement;
+          let codeBlock: HTMLElement | null = null;
+          while (target && target !== document.body) {
+            if (target.tagName === "PRE" || target.tagName === "CODE") {
+              codeBlock = target;
+              break;
+            }
+            target = target.parentElement;
+          }
+
+          if (codeBlock) {
+            const range = document.createRange();
+            range.selectNodeContents(codeBlock);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          } else {
+            document.execCommand("selectAll");
+          }
         }}
       >
         Select All
@@ -300,6 +327,7 @@ const OSRContextMenu = () => {
         Redo
       </div>
 
+      <hr className="my-1 border-gray-500" />
       <div
         className="cursor-pointer hover:opacity-90"
         onClick={(e) => {

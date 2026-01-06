@@ -9,14 +9,14 @@ echo "🚀 Starting Local CI Simulation..."
 # 0. Merge Check
 echo "-----------------------------------"
 echo "🔀 Checking for merge conflicts with main..."
-git fetch origin main > /dev/null 2>&1
+git fetch origin main >/dev/null 2>&1
 # Using merge-tree to check for conflicts without touching working directory
 # grep returns 0 (true) if found, 1 (false) if not. We want to fail if found.
 if git merge-tree "$(git merge-base HEAD origin/main)" HEAD origin/main | grep -q "<<<<<<<"; then
-    echo "❌ Merge conflicts detected with origin/main! Please rebase or merge main."
-    exit 1
+	echo "❌ Merge conflicts detected with origin/main! Please rebase or merge main."
+	exit 1
 else
-    echo "✅ Branch merges cleanly with main"
+	echo "✅ Branch merges cleanly with main"
 fi
 
 # 1. Prettier Check
