@@ -165,7 +165,7 @@ export function Chat() {
     };
   }, [isStreaming, jetbrains, isInEdit]);
 
-  const { widget, highlights } = useFindWidget(
+  const { widget, highlights, runHighlightUpdate } = useFindWidget(
     virtuosoRef,
     stepsDivRef,
     tabsRef,
@@ -498,6 +498,12 @@ export function Chat() {
             }
             return false;
           }}
+          atBottomStateChange={(isAtBottom) => {
+            if (isAtBottom) {
+              // We could resume auto-scroll here if we wanted
+            }
+          }}
+          onScroll={(e) => runHighlightUpdate()}
           className={
             showScrollbar
               ? "thin-scrollbar overflow-y-scroll"

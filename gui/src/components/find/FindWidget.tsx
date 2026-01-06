@@ -158,117 +158,105 @@ export const useFindWidget = (
   const [visibleHighlights, setVisibleHighlights] = useState<SearchMatch[]>([]);
 
   // Update visible highlights when scrolling or content changes
-  useEffect(() => {
-    if (!open || disabled) {
-      setVisibleHighlights([]);
+  const updateHighlights = useCallback(() => {
+    const { results } = searchWithinContainer(searchRef, searchTerm, {
+      caseSensitive,
+      useRegex,
+      offsetHeight: headerHeight,
+    });
+    setVisibleHighlights(results);
+  }, [searchRef, searchTerm, caseSensitive, useRegex, headerHeight]);
+
+  // Track previous search term to determine if we should scroll
+  const prevSearchTerm = useRef<string>("");
+
+  // Main function for finding matches (Data Search)
+  const refreshSearch = useCallback(() => {
+    // Search History
+    const results: SearchMatch[] = [];
+    const query = caseSensitive ? searchTerm : searchTerm.toLowerCase();
+
+    if (!query) {
+      setMatches([]);
       return;
     }
 
-    // We can't easily debounce this vs the render cycle, but we try:
-    const updateHighlights = () => {
-      const { results } = searchWithinContainer(searchRef, searchTerm, {
-        caseSensitive,
-        useRegex,
-        offsetHeight: headerHeight,
-      });
-      setVisibleHighlights(results);
-    };
+    history.forEach((item, historyIndex) => {
+      if (item.message.role === "system") return;
+      const content = item.message.content;
+      const textContent =
+        typeof content === "string"
+          ? content
+          : Array.isArray(content)
+            ? content
+                .map((part) => (part.type === "text" ? part.text : ""))
+                .join("")
+            : "";
 
-    // Initial update
-    updateHighlights();
+      const textToCheck = caseSensitive
+        ? textContent
+        : textContent.toLowerCase();
 
-    // Interval to keep highlights roughly synced with scrolling?
-    // Virtuoso handles scrolling, so the DOM changes.
-    // Ideally we'd bind to Virtuoso's scroll event, but we don't have it easily here exposed.
-    // relying on the parent to re-render might not happen on just scroll?
-    // The parent Chat.tsx renders, but updating this hook...
-    // We'll set an interval or rely on searchRef click hack existing + maybe a poll?
-    const interval = setInterval(updateHighlights, 250);
-    return () => clearInterval(interval);
+      let startIndex = 0;
+      while ((startIndex = textToCheck.indexOf(query, startIndex)) !== -1) {
+        results.push({
+          index: results.length,
+          messageIndex: historyIndex,
+          messageId: item.message.id,
+        });
+        startIndex += query.length;
+      }
+    });
+
+    setMatches(results);
+
+    // Determine scrolling behavior
+    // 1. If search term changed, scroll to first match
+    // 2. If search term matches previous, try to preserve current match
+    if (searchTerm !== prevSearchTerm.current) {
+      prevSearchTerm.current = searchTerm;
+      if (results.length > 0) {
+        scrollToMatch(results[0]);
+      }
+    } else {
+      // Preserve current match if possible
+      if (currentMatch) {
+        const matchingResult = results.find(
+          (r) =>
+            (currentMatch.messageId &&
+              r.messageId === currentMatch.messageId) ||
+            (!currentMatch.messageId &&
+              r.messageIndex === currentMatch.messageIndex),
+        );
+        if (matchingResult) {
+          setCurrentMatch(matchingResult);
+        } else {
+          setCurrentMatch(results[0]);
+        }
+      } else if (results.length > 0) {
+        setCurrentMatch(results[0]);
+      }
+    }
+
+    // Always update highlights after search refresh
+    // setTimeout to allow DOM to settle if needed (though Virtuoso usually handles this)
+    setTimeout(updateHighlights, 0);
   }, [
     searchTerm,
     caseSensitive,
     useRegex,
-    searchRef,
-    headerHeight,
-    open,
-    disabled,
+    history,
+    scrollToMatch,
+    currentMatch,
+    updateHighlights,
   ]);
 
-  // Main function for finding matches (Data Search)
-  const refreshSearch = useCallback(
-    (scrollTo: ScrollToMatchOption = "none") => {
-      // Search History
-      const results: SearchMatch[] = [];
-      const query = caseSensitive ? searchTerm : searchTerm.toLowerCase();
-
-      if (!query) {
-        setMatches([]);
-        return;
-      }
-
-      history.forEach((item, historyIndex) => {
-        if (item.message.role === "system") return;
-        const content = item.message.content;
-        const textContent =
-          typeof content === "string"
-            ? content
-            : Array.isArray(content)
-              ? content
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")
-              : "";
-
-        const textToCheck = caseSensitive
-          ? textContent
-          : textContent.toLowerCase();
-
-        let startIndex = 0;
-        while ((startIndex = textToCheck.indexOf(query, startIndex)) !== -1) {
-          results.push({
-            index: results.length,
-            messageIndex: historyIndex,
-          });
-          startIndex += query.length;
-        }
-      });
-
-      setMatches(results);
-
-      // Find match closest to the middle of the view?
-      // With virtual scroll, "middle" is hard.
-      // We will just default to the first one or keep current?
-      if (searchTerm.length > 1 && results.length) {
-        if (scrollTo === "first") {
-          scrollToMatch(results[0]);
-        }
-        // "closest" is hard without DOM. We skip it for now and assume top.
-        if (scrollTo === "none") {
-          // Keep current if possible?
-          if (currentMatch) {
-            const matchingResult = results.find(
-              (r) => r.messageIndex === currentMatch.messageIndex,
-            );
-            if (matchingResult) {
-              setCurrentMatch(matchingResult);
-            } else {
-              setCurrentMatch(results[0]);
-            }
-          } else {
-            setCurrentMatch(results[0]);
-          }
-        }
-      }
-    },
-    [searchTerm, caseSensitive, useRegex, history, scrollToMatch],
-  );
-
-  // Triggers that should cause immediate refresh of results to closest search value:
+  // Run search when dependencies change
   useEffect(() => {
     if (disabled || !open) {
       setMatches([]);
     } else {
-      refreshSearch("first");
+      refreshSearch();
     }
   }, [refreshSearch, open, disabled]);
 
@@ -278,13 +266,13 @@ export const useFindWidget = (
     const searchContainer = searchRef.current;
     if (!open || !searchContainer) return;
     const handleSearchRefClick = () => {
-      // Just re-run highlights
+      updateHighlights();
     };
     searchContainer.addEventListener("click", handleSearchRefClick);
     return () => {
       searchContainer.removeEventListener("click", handleSearchRefClick);
     };
-  }, [searchRef, refreshSearch, open]);
+  }, [searchRef, updateHighlights, open]);
 
   // Find widget component
   const widget = (
@@ -373,5 +361,6 @@ export const useFindWidget = (
   return {
     highlights,
     widget,
+    runHighlightUpdate: updateHighlights,
   };
 };

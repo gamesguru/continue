@@ -10,6 +10,7 @@ export interface SearchMatch {
   textNode?: Text;
   overlayRectangle?: Rectangle;
   messageIndex?: number; // Index in the history array
+  messageId?: string;
 }
 
 interface SearchOptions {
