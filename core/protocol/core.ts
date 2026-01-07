@@ -102,6 +102,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/deleteGlobalRule": [{ baseFilename: string }, void];
+  "config/deletePromptFile": [{ baseFilename: string }, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,

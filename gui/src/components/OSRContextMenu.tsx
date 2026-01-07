@@ -78,6 +78,7 @@ const OSRContextMenu = () => {
       setPosition(null);
     }
     function contextMenuHandler(event: MouseEvent) {
+      if (event.shiftKey) return;
       event.preventDefault();
     }
     function clickHandler(event: MouseEvent) {
@@ -87,6 +88,8 @@ const OSRContextMenu = () => {
       }
 
       if (event.button === 2) {
+        if (event.shiftKey) return;
+
         // Prevent default context menu
         event.preventDefault();
 
@@ -366,16 +369,6 @@ const OSRContextMenu = () => {
         </>
       )}
 
-      <div className="my-1 h-[1px] w-full bg-gray-500" />
-      <div
-        className="cursor-pointer hover:opacity-90"
-        onClick={(e) => {
-          onMenuItemClick(e);
-          ideMessenger.post("toggleDevTools", undefined);
-        }}
-      >
-        Open Dev Tools
-      </div>
       {ruleContext && (
         <>
           <hr className="my-1 border-gray-500" />

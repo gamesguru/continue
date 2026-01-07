@@ -60,6 +60,7 @@ import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 // import { useAutoScroll } from "./useAutoScroll";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { useChatScroll } from "../../hooks/useChatScroll";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -147,6 +148,12 @@ export function Chat() {
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
+  const { handleFollowOutput, handleAtBottomStateChange } = useChatScroll(
+    history.length,
+    isStreaming,
+    virtuosoRef,
+  );
+
   useEffect(() => {
     // Cmd + Backspace to delete current step
     const listener = (e: KeyboardEvent) => {
@@ -172,19 +179,6 @@ export function Chat() {
     history,
     isStreaming,
   );
-
-  // Force scroll to bottom on initial load
-  useEffect(() => {
-    if (history.length > 0 && virtuosoRef.current) {
-      // slight timeout to let virtuoso measure items
-      setTimeout(() => {
-        virtuosoRef.current?.scrollToIndex({
-          index: history.length - 1,
-          align: "end",
-        });
-      }, 100);
-    }
-  }, [virtuosoRef.current]); // Only run when ref attaches initially (and history exists)
 
   const sendInput = useCallback(
     (
@@ -463,7 +457,7 @@ export function Chat() {
     [history],
   );
 
-  const shouldAutoScroll = useRef(true);
+  // const shouldAutoScroll = useRef(true); // Moved to hook
 
   return (
     <>
@@ -480,6 +474,7 @@ export function Chat() {
           initialTopMostItemIndex={filteredHistory.length - 1}
           computeItemKey={(index, item) => item.message.id}
           defaultItemHeight={50}
+          overscan={1000}
           itemContent={(index, item) => (
             <div
               key={item.message.id}
@@ -499,18 +494,8 @@ export function Chat() {
             </div>
           )}
           atBottomThreshold={0}
-          followOutput={(isAtBottom) => {
-            const should = isStreaming && shouldAutoScroll.current;
-            // console.log("followOutput", { isStreaming, isAtBottom, ref: shouldAutoScroll.current, should });
-            if (should) {
-              return "auto";
-            }
-            return false;
-          }}
-          atBottomStateChange={(isAtBottom) => {
-            // console.log("atBottomStateChange", isAtBottom);
-            shouldAutoScroll.current = isAtBottom;
-          }}
+          followOutput={handleFollowOutput}
+          atBottomStateChange={handleAtBottomStateChange}
           className={
             showScrollbar
               ? "thin-scrollbar transform-gpu overflow-y-scroll"

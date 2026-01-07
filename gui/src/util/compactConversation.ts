@@ -22,6 +22,14 @@ export const useCompactConversation = () => {
       // Set loading state
       dispatch(setCompactionLoading({ index, loading: true }));
 
+      // Save the session first to ensure the core has the latest history
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+          generateTitle: false,
+        }),
+      );
+
       await ideMessenger.request("conversation/compact", {
         index,
         sessionId: currentSessionId,

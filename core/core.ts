@@ -361,8 +361,15 @@ export class Core {
       );
     });
 
-    on("history/save", (msg) => {
-      historyManager.save(msg.data);
+    on("history/save", async (msg) => {
+      const session = msg.data;
+      if (!session.workspaceDirectory) {
+        const dirs = await this.ide.getWorkspaceDirs();
+        if (dirs.length > 0) {
+          session.workspaceDirectory = dirs[0];
+        }
+      }
+      historyManager.save(session);
     });
 
     on("history/share", async (msg) => {
@@ -400,6 +407,13 @@ export class Core {
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig(
         "Prompt file created (config/newPromptFile message)",
+      );
+    });
+
+    on("config/deletePromptFile", async (msg) => {
+      await this.ide.deleteFile(msg.data.baseFilename);
+      await this.configHandler.reloadConfig(
+        "Prompt file deleted (config/deletePromptFile message)",
       );
     });
 
