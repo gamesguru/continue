@@ -255,12 +255,15 @@ body[data-color-mode*="light"] {
     --vscode-editor-findMatchHighlightBackground,
     #ea5c0055
   );
+  color: inherit;
   border-radius: 2px;
+  padding: 0 1px;
 }
 
 .find-match.active {
   background-color: var(--vscode-editor-findMatchBackground, #ea5c00aa);
   outline: 1px solid var(--vscode-editor-findMatchBorder, #ea5c00);
+  color: inherit;
 }
 .wmde-markdown small {
   font-size: 90%;
@@ -1056,22 +1059,4 @@ body[data-color-mode*="light"] {
 }
 .mermaid foreignObject {
   width: 100%;
-}
-
-.wmde-markdown mark.find-match {
-  background-color: var(
-    --vscode-editor-findMatchHighlight-background,
-    rgba(255, 215, 0, 0.5)
-  );
-  color: inherit;
-  padding: 0 1px;
-}
-
-.wmde-markdown mark.find-match.active {
-  background-color: var(
-    --vscode-editor-findMatch-background,
-    #f2c94c
-  ); /* Fallback to amber */
-  border: 1px solid var(--vscode-editor-findMatch-border, transparent);
-  color: inherit;
 }

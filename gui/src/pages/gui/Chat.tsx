@@ -49,19 +49,18 @@ import { BackgroundModeView } from "../../components/BackgroundMode/BackgroundMo
 import { CliInstallBanner } from "../../components/CliInstallBanner";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { FatalErrorIndicator } from "../../components/config/FatalErrorNotice";
+import { SearchMatch } from "../../components/find/findWidgetSearch";
 import InlineErrorMessage from "../../components/mainInput/InlineErrorMessage";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils/resolveEditorContent";
+import { useChatScroll } from "../../hooks/useChatScroll";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
-import { SearchMatch } from "../../components/find/findWidgetSearch";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
-import { useAutoScroll } from "./useAutoScroll";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
-import { useChatScroll } from "../../hooks/useChatScroll";
 
 // Helper function to find the index of the latest conversation summary
 function findLatestSummaryIndex(history: ChatHistoryItem[]): number {
@@ -116,8 +115,6 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
@@ -129,7 +126,8 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.editModeState.codeToEdit);
-  const isInEdit = useAppSelector((store) => store.session.isInEdit);
+  const isInEdit = useAppSelector((state) => state.session.isInEdit);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const allSessionMetadata = useAppSelector(
@@ -144,8 +142,7 @@ export function Chat() {
     return isJetBrains();
   }, []);
 
-  // NOTE: Disabled for now (complicates Virtuoso / DOM)
-  // useAutoScroll(stepsDivRef, history);
+  const [stepsOpen] = useState<(boolean | undefined)[]>([]);
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
 
@@ -516,7 +513,6 @@ export function Chat() {
               : "no-scrollbar overflow-y-scroll"
           }
         />
-        {/* highlights (removed) */}
       </StepsDiv>
       <div className={"relative"}>
         <ContinueInputBox

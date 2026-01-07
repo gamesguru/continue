@@ -47,14 +47,13 @@ const OSRContextMenu = () => {
 
   function handleEditRule() {
     if (!ruleContext) return;
-    // Open the file logic
-    // We need to know the path or reconstruct it. Ideally we pass the full path or enough info.
-    // For now we will rely on edit just opening the file if we can notify core.
-    // Actually, "config/openProfile" isn't quite right. We might need a new "openBlock" or just use "openFile" if we knew the path.
-    // But we only have baseFilename.
-    // Let's use the core logic to construct path if possible, or maybe we can just pass the path in the data attribute?
-    // Let's stick to deleting for now as that was the main request, but user also said "edit".
-    // Editor is easier if we have the full path.
+    if (ruleContext.isGlobal) {
+      ideMessenger.post("config/openProfile", { profileId: undefined });
+    } else {
+      ideMessenger.post("config/openProfile", { profileId: undefined });
+    }
+    setPosition(null);
+    setRuleContext(null);
   }
 
   function handleDeleteRule() {
@@ -334,6 +333,15 @@ const OSRContextMenu = () => {
       {ruleContext && (
         <>
           <hr className="my-1 border-gray-500" />
+          <div
+            className="cursor-pointer hover:opacity-90"
+            onClick={(e) => {
+              e.preventDefault();
+              handleEditRule();
+            }}
+          >
+            Edit Rule
+          </div>
           <div
             className="cursor-pointer hover:opacity-90"
             onClick={(e) => {
