@@ -500,8 +500,8 @@ export function Chat() {
           atBottomStateChange={handleAtBottomStateChange}
           className={
             showScrollbar
-              ? "thin-scrollbar transform-gpu overflow-y-scroll"
-              : "no-scrollbar transform-gpu overflow-y-scroll"
+              ? "thin-scrollbar transform-gpu overflow-y-auto"
+              : "no-scrollbar transform-gpu overflow-y-auto"
           }
         />
         {/* highlights (removed) */}

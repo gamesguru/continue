@@ -21,6 +21,7 @@ export const useCompactConversation = () => {
     try {
       // Set loading state
       dispatch(setCompactionLoading({ index, loading: true }));
+      ideMessenger.post("showToast", ["info", "Compacting conversation..."]);
 
       // Save the session first to ensure the core has the latest history
       await dispatch(
@@ -45,10 +46,15 @@ export const useCompactConversation = () => {
 
       // Calculate context percentage for the newly loaded session
       if (loadSessionResult.meta.requestStatus === "fulfilled") {
-        dispatch(calculateContextPercentage());
+        await dispatch(calculateContextPercentage());
+        ideMessenger.post("showToast", ["info", "Compaction complete"]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error compacting conversation:", error);
+      ideMessenger.post("showToast", [
+        "error",
+        `Compaction failed: ${error.message || error}`,
+      ]);
     } finally {
       // Clear loading state
       dispatch(setCompactionLoading({ index, loading: false }));
@@ -59,10 +65,10 @@ export const useCompactConversation = () => {
 export const useDeleteCompaction = () => {
   const dispatch = useAppDispatch();
 
-  return (index: number) => {
+  return async (index: number) => {
     // Update local state and save to persistence
     dispatch(deleteCompaction(index));
-    dispatch(
+    await dispatch(
       saveCurrentSession({
         openNewSession: false,
         generateTitle: false,

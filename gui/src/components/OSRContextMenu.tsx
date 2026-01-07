@@ -224,12 +224,9 @@ const OSRContextMenu = () => {
     }
 
     setPosition(null);
-
-    if (isOSREnabled && platform.current !== "mac") {
-      document.addEventListener("mousedown", clickHandler);
-      document.addEventListener("mouseleave", leaveWindowHandler);
-      document.addEventListener("contextmenu", contextMenuHandler);
-    }
+    document.addEventListener("mousedown", clickHandler);
+    document.addEventListener("mouseleave", leaveWindowHandler);
+    document.addEventListener("contextmenu", contextMenuHandler);
 
     return () => {
       document.removeEventListener("mousedown", clickHandler);
@@ -238,7 +235,7 @@ const OSRContextMenu = () => {
     };
   }, [isOSREnabled]);
 
-  if (platform.current === "mac" || !isOSREnabled || !position) {
+  if (!position) {
     return null;
   }
   return (
