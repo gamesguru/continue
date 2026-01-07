@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 
 export const useChatScroll = (
   historyLength: number,
   isStreaming: boolean,
-  virtuosoRef: React.RefObject<VirtuosoHandle>,
+  virtuosoRef: RefObject<VirtuosoHandle>,
 ) => {
   const shouldAutoScroll = useRef(true);
 

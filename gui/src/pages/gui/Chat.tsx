@@ -466,7 +466,9 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`pt-[8px] ${history.length > 0 ? "flex-1" : ""}`}
+        className={`min-h-0 overflow-hidden pt-[8px] ${
+          history.length > 0 ? "flex-1" : ""
+        }`}
       >
         <Virtuoso
           ref={virtuosoRef}
@@ -474,7 +476,7 @@ export function Chat() {
           initialTopMostItemIndex={filteredHistory.length - 1}
           computeItemKey={(index, item) => item.message.id}
           defaultItemHeight={50}
-          overscan={1000}
+          overscan={500}
           itemContent={(index, item) => (
             <div
               key={item.message.id}
@@ -493,7 +495,7 @@ export function Chat() {
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>
           )}
-          atBottomThreshold={0}
+          atBottomThreshold={50}
           followOutput={handleFollowOutput}
           atBottomStateChange={handleAtBottomStateChange}
           className={
