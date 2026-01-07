@@ -691,7 +691,11 @@ export class Core {
         return undefined;
       } catch (error) {
         Logger.error(`Error compacting conversation: ${error}`);
-        return undefined;
+        void this.ide.showToast(
+          "error",
+          `Error compacting conversation: ${error}`,
+        );
+        throw error;
       }
     });
 

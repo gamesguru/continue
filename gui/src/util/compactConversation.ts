@@ -2,9 +2,10 @@ import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
-  setCompactionLoading,
   deleteCompaction,
+  setCompactionLoading,
 } from "../redux/slices/sessionSlice";
+import { calculateContextPercentage } from "../redux/thunks/calculateContextPercentage";
 import { loadSession, saveCurrentSession } from "../redux/thunks/session";
 
 export const useCompactConversation = () => {
@@ -27,12 +28,17 @@ export const useCompactConversation = () => {
       });
 
       // Reload the current session to refresh the conversation state
-      dispatch(
+      const loadSessionResult = await dispatch(
         loadSession({
           sessionId: currentSessionId,
           saveCurrentSession: false,
         }),
       );
+
+      // Calculate context percentage for the newly loaded session
+      if (loadSessionResult.meta.requestStatus === "fulfilled") {
+        dispatch(calculateContextPercentage());
+      }
     } catch (error) {
       console.error("Error compacting conversation:", error);
     } finally {

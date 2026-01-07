@@ -72,6 +72,12 @@ export async function compactConversation({
     {},
   );
 
+  if (!response.content || response.content.trim().length === 0) {
+    throw new Error(
+      "Failed to generate conversation summary: Model returned empty response",
+    );
+  }
+
   // Update the target message with the conversation summary
   const updatedHistory = [...session.history];
   updatedHistory[index] = {

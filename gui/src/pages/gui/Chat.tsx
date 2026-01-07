@@ -463,6 +463,8 @@ export function Chat() {
     [history],
   );
 
+  const shouldAutoScroll = useRef(true);
+
   return (
     <>
       {!!showSessionTabs && !isInEdit && <TabBar ref={tabsRef} />}
@@ -496,18 +498,19 @@ export function Chat() {
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>
           )}
+          atBottomThreshold={0}
           followOutput={(isAtBottom) => {
-            if (isStreaming && isAtBottom) {
+            const should = isStreaming && shouldAutoScroll.current;
+            // console.log("followOutput", { isStreaming, isAtBottom, ref: shouldAutoScroll.current, should });
+            if (should) {
               return "auto";
             }
             return false;
           }}
           atBottomStateChange={(isAtBottom) => {
-            if (isAtBottom) {
-              // Auto-scroll logic handled by followOutput
-            }
+            // console.log("atBottomStateChange", isAtBottom);
+            shouldAutoScroll.current = isAtBottom;
           }}
-          onScroll={(e) => {}}
           className={
             showScrollbar
               ? "thin-scrollbar overflow-y-scroll"
