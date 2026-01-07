@@ -8,9 +8,16 @@ export const useChatScroll = (
 ) => {
   const shouldAutoScroll = useRef(true);
 
+  const hasInitiallyScrolled = useRef(false);
+
   // Force scroll to bottom on initial load
   useEffect(() => {
-    if (historyLength > 0 && virtuosoRef.current) {
+    if (
+      historyLength > 0 &&
+      virtuosoRef.current &&
+      !hasInitiallyScrolled.current
+    ) {
+      hasInitiallyScrolled.current = true;
       // slight timeout to let virtuoso measure items
       setTimeout(() => {
         virtuosoRef.current?.scrollToIndex({
@@ -19,7 +26,7 @@ export const useChatScroll = (
         });
       }, 100);
     }
-  }, [virtuosoRef.current]);
+  }, [historyLength, virtuosoRef.current]);
 
   const handleAtBottomStateChange = (isAtBottom: boolean) => {
     shouldAutoScroll.current = isAtBottom;

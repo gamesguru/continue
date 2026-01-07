@@ -482,7 +482,6 @@ export function Chat() {
         <Virtuoso
           ref={virtuosoRef}
           data={filteredHistory}
-          initialTopMostItemIndex={filteredHistory.length - 1}
           computeItemKey={(index, item) => item.message.id}
           defaultItemHeight={50}
           overscan={200}
