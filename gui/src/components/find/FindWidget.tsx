@@ -221,7 +221,6 @@ export const useFindWidget = (
       className={`fixed top-0 z-50 transition-all ${open ? "" : "-translate-y-full"} bg-vsc-background right-0 flex flex-row items-center gap-1.5 rounded-bl-lg border-0 border-b border-l border-solid border-zinc-700 pl-[3px] pr-3 sm:gap-2`}
     >
       <Input
-        disabled={disabled}
         type="text"
         ref={inputRef}
         value={currentValue}

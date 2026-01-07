@@ -337,7 +337,15 @@ export function Chat() {
   );
 
   const renderChatHistoryItem = useCallback(
-    (item: ChatHistoryItemWithMessageId, index: number) => {
+    (
+      item: ChatHistoryItemWithMessageId,
+      index: number,
+      searchState?: {
+        searchTerm: string;
+        caseSensitive: boolean;
+        useRegex: boolean;
+      },
+    ) => {
       const {
         message,
         editorState,
@@ -393,6 +401,7 @@ export function Chat() {
                   isLast={index === history.length - 1}
                   item={item}
                   latestSummaryIndex={latestSummaryIndex}
+                  searchState={searchState}
                 />
               </TimelineItem>
             </div>
@@ -438,6 +447,7 @@ export function Chat() {
               isLast={index === history.length - 1}
               item={item}
               latestSummaryIndex={latestSummaryIndex}
+              searchState={searchState}
             />
           </TimelineItem>
         </div>
@@ -476,7 +486,7 @@ export function Chat() {
           initialTopMostItemIndex={filteredHistory.length - 1}
           computeItemKey={(index, item) => item.message.id}
           defaultItemHeight={50}
-          overscan={500}
+          overscan={200}
           itemContent={(index, item) => (
             <div
               key={item.message.id}
@@ -490,7 +500,7 @@ export function Chat() {
                   dispatch(newSession());
                 }}
               >
-                {renderChatHistoryItem(item, index)}
+                {renderChatHistoryItem(item, index, searchState)}
               </ErrorBoundary>
               {index === history.length - 1 && <InlineErrorMessage />}
             </div>
@@ -500,8 +510,8 @@ export function Chat() {
           atBottomStateChange={handleAtBottomStateChange}
           className={
             showScrollbar
-              ? "thin-scrollbar transform-gpu overflow-y-auto"
-              : "no-scrollbar transform-gpu overflow-y-auto"
+              ? "thin-scrollbar overflow-y-scroll"
+              : "no-scrollbar overflow-y-scroll"
           }
         />
         {/* highlights (removed) */}
