@@ -455,7 +455,11 @@ export function Chat() {
   const showScrollbar = showChatScrollbar ?? true;
 
   const filteredHistory = useMemo(
-    () => history.filter((item) => item.message.role !== "system"),
+    () =>
+      history.filter(
+        (item) =>
+          item.message.role !== "system" && item.message.role !== "tool",
+      ),
     [history],
   );
 

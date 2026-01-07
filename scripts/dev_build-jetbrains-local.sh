@@ -67,5 +67,8 @@ echo "Plugin artifact located at: $ARTIFACT_PATH"
 
 # Link to build/ directory
 mkdir -p "$REPO_ROOT/build"
-mv "$ARTIFACT_PATH" "$REPO_ROOT/build/"
-echo "✅ Moved to: $REPO_ROOT/build/continue-intellij-extension.zip"
+GIT_DESCRIBE=$(git describe --tags --dirty --always)
+BASE_NAME=$(basename "$ARTIFACT_PATH" .zip)
+NEW_NAME="${BASE_NAME}-${GIT_DESCRIBE}.zip"
+mv "$ARTIFACT_PATH" "$REPO_ROOT/build/$NEW_NAME"
+echo "✅ Moved to: $REPO_ROOT/build/$NEW_NAME"

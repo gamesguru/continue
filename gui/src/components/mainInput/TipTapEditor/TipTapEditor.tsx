@@ -97,7 +97,8 @@ function TipTapEditorInner(props: TipTapEditorProps) {
 
   useEffect(() => {
     if (props.isMainInput) {
-      editor?.commands.clearContent(true);
+      // Clear content without triggering an update/history push
+      editor?.commands.clearContent(false);
     }
   }, [editor, props.isMainInput]);
 
