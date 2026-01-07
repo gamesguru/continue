@@ -484,7 +484,7 @@ export function Chat() {
             <div
               key={item.message.id}
               style={{
-                minHeight: index === filteredHistory.length - 1 ? "200px" : 0,
+                minHeight: 0,
               }}
             >
               <ErrorBoundary
@@ -513,8 +513,8 @@ export function Chat() {
           }}
           className={
             showScrollbar
-              ? "thin-scrollbar overflow-y-scroll"
-              : "no-scrollbar overflow-y-scroll"
+              ? "thin-scrollbar transform-gpu overflow-y-scroll"
+              : "no-scrollbar transform-gpu overflow-y-scroll"
           }
         />
         {/* highlights (removed) */}
