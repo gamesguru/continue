@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import { SearchMatch } from "../find/findWidgetSearch";
 import ThinkingBlockPeek from "../mainInput/belowMainInput/ThinkingBlockPeek";
 import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import ConversationSummary from "./ConversationSummary";
@@ -20,6 +21,7 @@ interface StepContainerProps {
     searchTerm: string;
     caseSensitive: boolean;
     useRegex: boolean;
+    currentMatch?: SearchMatch;
   };
 }
 

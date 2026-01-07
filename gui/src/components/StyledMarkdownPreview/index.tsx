@@ -320,6 +320,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               }
 
               // Determine if this is the active match
+              // We check if the messageIndex matches AND if this matches the matchIndexInMessage
+              // calculated by FindWidget. BUT FindWidget calculates it based on RAW text.
+              // To be "more reliable", we'll just check if this is the active match if messageIndex matches
+              // and the match count matches. This is still brittle but better than nothing.
               const isActive =
                 currentMatch &&
                 currentMatch.messageIndex === itemIndexRef.current &&
@@ -331,7 +335,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 tagName: "mark",
                 properties: {
                   className: isActive ? "find-match active" : "find-match",
-                }, // We will style this class
+                },
                 children: [
                   {
                     type: "text",

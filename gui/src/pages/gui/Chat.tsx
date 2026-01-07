@@ -55,10 +55,11 @@ import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/ut
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
+import { SearchMatch } from "../../components/find/findWidgetSearch";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
-// import { useAutoScroll } from "./useAutoScroll";
+import { useAutoScroll } from "./useAutoScroll";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { useChatScroll } from "../../hooks/useChatScroll";
 
@@ -344,6 +345,7 @@ export function Chat() {
         searchTerm: string;
         caseSensitive: boolean;
         useRegex: boolean;
+        currentMatch?: SearchMatch;
       },
     ) => {
       const {
