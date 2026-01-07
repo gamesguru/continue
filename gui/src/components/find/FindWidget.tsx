@@ -129,6 +129,12 @@ export const useFindWidget = (
   // Track previous search term to determine if we should scroll
   const prevSearchTerm = useRef<string>("");
 
+  // Keep a ref to the current match to avoid dependency loop in refreshSearch
+  const currentMatchRef = useRef<SearchMatch | undefined>(undefined);
+  useEffect(() => {
+    currentMatchRef.current = currentMatch;
+  }, [currentMatch]);
+
   // Main function for finding matches (Data Search)
   const refreshSearch = useCallback(() => {
     // Search History
@@ -157,13 +163,16 @@ export const useFindWidget = (
         : textContent.toLowerCase();
 
       let startIndex = 0;
+      let matchIndexInMessage = 0;
       while ((startIndex = textToCheck.indexOf(query, startIndex)) !== -1) {
         results.push({
           index: results.length,
           messageIndex: historyIndex,
           messageId: item.message.id,
+          matchIndexInMessage: matchIndexInMessage,
         });
         startIndex += query.length;
+        matchIndexInMessage++;
       }
     });
 
@@ -176,13 +185,15 @@ export const useFindWidget = (
         scrollToMatch(results[0]);
       }
     } else {
-      if (currentMatch) {
+      const activeMatch = currentMatchRef.current;
+      if (activeMatch) {
         const matchingResult = results.find(
           (r) =>
-            (currentMatch.messageId &&
-              r.messageId === currentMatch.messageId) ||
-            (!currentMatch.messageId &&
-              r.messageIndex === currentMatch.messageIndex),
+            (activeMatch.messageId &&
+              r.messageId === activeMatch.messageId &&
+              r.matchIndexInMessage === activeMatch.matchIndexInMessage) ||
+            (!activeMatch.messageId &&
+              r.messageIndex === activeMatch.messageIndex),
         );
         if (matchingResult) {
           setCurrentMatch(matchingResult);
@@ -193,14 +204,7 @@ export const useFindWidget = (
         setCurrentMatch(results[0]);
       }
     }
-  }, [
-    searchTerm,
-    caseSensitive,
-    useRegex,
-    history,
-    scrollToMatch,
-    currentMatch,
-  ]);
+  }, [searchTerm, caseSensitive, useRegex, history, scrollToMatch]);
 
   // Run search when dependencies change
   useEffect(() => {
@@ -291,6 +295,7 @@ export const useFindWidget = (
       searchTerm: open ? searchTerm : "", // Only highlight if open
       caseSensitive,
       useRegex,
+      currentMatch,
     },
   };
 };

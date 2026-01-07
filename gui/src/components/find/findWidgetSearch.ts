@@ -11,6 +11,7 @@ export interface SearchMatch {
   overlayRectangle?: Rectangle;
   messageIndex?: number; // Index in the history array
   messageId?: string;
+  matchIndexInMessage?: number;
 }
 
 interface SearchOptions {

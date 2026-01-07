@@ -17,6 +17,7 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize } from "../../util";
+import { SearchMatch } from "../find/findWidgetSearch";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
@@ -159,8 +160,10 @@ interface StyledMarkdownPreviewProps {
     searchTerm: string;
     caseSensitive: boolean;
     useRegex: boolean;
+    currentMatch?: SearchMatch;
   };
 }
+
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
 
 function getLanguageFromClassName(className: any): string | null {
@@ -225,6 +228,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
   const itemIndexRef = useUpdatingRef(props.itemIndex);
+  const searchStateRef = useUpdatingRef(props.searchState);
 
   const codeblockStreamIds = useRef<string[]>([]);
 
@@ -272,6 +276,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
       () => {
         let codeBlockIndex = 0;
+        let localMatchIndex = 0;
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
@@ -280,8 +285,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           });
 
           // Highlight search terms
-          if (!props.searchState?.searchTerm) return;
-          const { searchTerm, caseSensitive } = props.searchState;
+          if (!searchStateRef.current?.searchTerm) return;
+          const { searchTerm, caseSensitive, currentMatch } =
+            searchStateRef.current;
           const query = caseSensitive ? searchTerm : searchTerm.toLowerCase();
 
           visit(tree, "text", (node: any, index: any, parent: any) => {
@@ -313,11 +319,19 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 });
               }
 
+              // Determine if this is the active match
+              const isActive =
+                currentMatch &&
+                currentMatch.messageIndex === itemIndexRef.current &&
+                currentMatch.matchIndexInMessage === localMatchIndex;
+
               // The match itself wrapped in mark
               newChildren.push({
                 type: "element",
                 tagName: "mark",
-                properties: { className: "find-match" }, // We will style this class
+                properties: {
+                  className: isActive ? "find-match active" : "find-match",
+                }, // We will style this class
                 children: [
                   {
                     type: "text",
@@ -329,6 +343,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 ],
               });
 
+              localMatchIndex++;
               lastIndex = matchIndex + query.length;
             }
 

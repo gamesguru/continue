@@ -59,11 +59,6 @@ export const handleVSCMetaKeyIssues = async (
     x: () => handleCutOperation(text, editor),
     c: () => handleCopyOperation(text),
     v: () => handlePasteOperation(editor),
-    z: () => {
-      return e.shiftKey
-        ? handleRedoOperation(editor)
-        : handleUndoOperation(editor);
-    },
   };
 
   if (e.key in handlers) {

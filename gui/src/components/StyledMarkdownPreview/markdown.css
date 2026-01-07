@@ -1043,11 +1043,19 @@ body[data-color-mode*="light"] {
 }
 
 .wmde-markdown mark.find-match {
-  background-color: rgba(255, 215, 0, 0.5);
   background-color: var(
     --vscode-editor-findMatchHighlight-background,
     rgba(255, 215, 0, 0.5)
   );
   color: inherit;
   padding: 0 1px;
+}
+
+.wmde-markdown mark.find-match.active {
+  background-color: var(
+    --vscode-editor-findMatch-background,
+    #f2c94c
+  ); /* Fallback to amber */
+  border: 1px solid var(--vscode-editor-findMatch-border, transparent);
+  color: inherit;
 }
