@@ -1,17 +1,17 @@
 import type AutocompleteLruCacheType from "./AutocompleteLruCache";
 
-jest.unstable_mockModule("async-mutex", () => {
+(jest as any).unstable_mockModule("async-mutex", () => {
   const acquire = jest.fn().mockResolvedValue(jest.fn());
   return {
     Mutex: jest.fn().mockImplementation(() => ({ acquire })),
   };
 });
 
-jest.unstable_mockModule("sqlite", () => ({
+(jest as any).unstable_mockModule("sqlite", () => ({
   open: jest.fn(),
 }));
 
-jest.unstable_mockModule("sqlite3", () => ({
+(jest as any).unstable_mockModule("sqlite3", () => ({
   default: {
     Database: jest.fn(),
   },
