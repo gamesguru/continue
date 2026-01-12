@@ -50,6 +50,7 @@ describe("Prompt file", () => {
 
     for (const provider of providers) {
       // Type the @ symbol to trigger completion
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       await editor.typeText("@");
 
       // Wait a moment for the completion to appear
