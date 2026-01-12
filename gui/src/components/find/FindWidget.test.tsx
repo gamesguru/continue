@@ -34,7 +34,10 @@ const TestComponent = ({ historyCount = 1000 }) => {
 };
 
 describe("FindWidget Search Integration", () => {
+  let originalResizeObserver: any;
+
   beforeEach(() => {
+    originalResizeObserver = global.ResizeObserver;
     vi.useFakeTimers();
     // Mock ResizeObserver
     global.ResizeObserver = class {
@@ -45,6 +48,7 @@ describe("FindWidget Search Integration", () => {
   });
 
   afterEach(() => {
+    global.ResizeObserver = originalResizeObserver;
     vi.useRealTimers();
     vi.clearAllMocks();
   });

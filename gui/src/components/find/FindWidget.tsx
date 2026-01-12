@@ -165,6 +165,7 @@ export const useFindWidget = (
         // Yield to main thread every 10ms
         if (Date.now() - start > 10) {
           await new Promise((resolve) => setTimeout(resolve, 0));
+          start = Date.now();
         }
 
         const item = history[i];
@@ -236,10 +237,19 @@ export const useFindWidget = (
   // Run search when dependencies change
   useEffect(() => {
     if (disabled || !open) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       setMatches([]);
     } else {
       refreshSearch();
     }
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [refreshSearch, open, disabled]);
 
   // Find widget component

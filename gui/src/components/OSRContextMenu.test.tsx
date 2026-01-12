@@ -166,6 +166,7 @@ describe("OSRContextMenu", () => {
     document.body.appendChild(container);
 
     // Mock document.createRange to return our mock
+    const originalCreateRange = document.createRange;
     document.createRange = vi.fn().mockReturnValue(mockRange);
 
     window.getSelection = vi.fn().mockReturnValue({
@@ -194,6 +195,7 @@ describe("OSRContextMenu", () => {
     );
 
     document.body.removeChild(container);
+    document.createRange = originalCreateRange;
   });
 
   it("should not open on left click", async () => {

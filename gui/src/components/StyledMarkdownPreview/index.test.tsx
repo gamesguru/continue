@@ -175,6 +175,7 @@ file.ts
 
 it("should scroll to active search match", async () => {
   const scrollIntoViewMock = vi.fn();
+  const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
   window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
 
   renderComponent("text match", {}, "match", {
@@ -188,4 +189,5 @@ it("should scroll to active search match", async () => {
     expect(mark).toHaveClass("active");
     expect(scrollIntoViewMock).toHaveBeenCalled();
   });
+  window.HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
 });

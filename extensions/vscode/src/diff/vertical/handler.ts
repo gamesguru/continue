@@ -95,17 +95,17 @@ export class VerticalDiffHandler implements vscode.Disposable {
     if (visible) {
       await vscode.window.showTextDocument(visible.document, {
         preview: false,
-        preserveFocus: false,
+        preserveFocus: true,
         viewColumn: visible.viewColumn,
       });
-      this.editor = vscode.window.activeTextEditor ?? visible;
+      this.editor = visible;
       return;
     }
 
     const doc = await vscode.workspace.openTextDocument(targetUri);
     const editor = await vscode.window.showTextDocument(doc, {
       preview: false,
-      preserveFocus: false,
+      preserveFocus: true,
     });
     this.editor = editor;
   }

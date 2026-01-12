@@ -49,7 +49,11 @@ describe("Keyboard Shortcuts", () => {
     this.timeout(DEFAULT_TIMEOUT.XL * 1000);
     await cleanupChat();
     await view.switchBack();
-    await editor.clearText();
+    try {
+      await editor.clearText();
+    } catch (e) {
+      console.log("Editor cleared or closed already");
+    }
     await new EditorView().closeAllEditors();
   });
 

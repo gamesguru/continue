@@ -22,7 +22,6 @@ describe("Chat", () => {
         overscan: 200,
         atBottomThreshold: 50,
       }),
-      expect.anything(),
     );
   });
 });

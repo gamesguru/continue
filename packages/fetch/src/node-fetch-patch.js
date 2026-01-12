@@ -104,7 +104,7 @@ export default async function fetch(url, options_) {
         return;
       }
 
-      // response.body.emit("error", error);
+      response.body.emit("error", error);
       response.body.destroy();
     };
 
