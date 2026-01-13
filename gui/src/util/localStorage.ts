@@ -17,12 +17,14 @@ type LocalStorageTypes = {
   disableIndexing: boolean;
   hasExitedFreeTrial: boolean;
   hasDismissedCliInstallBanner: boolean;
+  hasReasoningEnabled: boolean;
 };
 
 export enum LocalStorageKey {
   IsExploreDialogOpen = "isExploreDialogOpen",
   HasDismissedExploreDialog = "hasDismissedExploreDialog",
   HasExitedFreeTrial = "hasExitedFreeTrial",
+  HasReasoningEnabled = "hasReasoningEnabled",
 }
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

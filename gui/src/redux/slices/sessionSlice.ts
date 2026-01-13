@@ -1,9 +1,9 @@
 import {
   ActionReducerMapBuilder,
   AsyncThunk,
-  PayloadAction,
   createSelector,
   createSlice,
+  PayloadAction,
 } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
@@ -36,6 +36,11 @@ import { findLastIndex } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { type InlineErrorMessageType } from "../../components/mainInput/InlineErrorMessage";
 import { toolCallCtxItemToCtxItemWithId } from "../../pages/gui/ToolCallDiv/utils";
+import {
+  getLocalStorage,
+  LocalStorageKey,
+  setLocalStorage,
+} from "../../util/localStorage";
 import { addToolCallDeltaToState, isEditTool } from "../../util/toolCallState";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
@@ -243,6 +248,7 @@ export const INITIAL_SESSION_STATE: SessionState = {
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
   compactionLoading: {},
+  hasReasoningEnabled: getLocalStorage(LocalStorageKey.HasReasoningEnabled),
 };
 
 export const sessionSlice = createSlice({
@@ -957,6 +963,7 @@ export const sessionSlice = createSlice({
     },
     setHasReasoningEnabled: (state, action: PayloadAction<boolean>) => {
       state.hasReasoningEnabled = action.payload;
+      setLocalStorage(LocalStorageKey.HasReasoningEnabled, action.payload);
     },
     setNewestToolbarPreviewForInput: (
       state,
