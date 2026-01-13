@@ -4,7 +4,7 @@ import QuickLRU from "quick-lru";
 export type cacheElementType = string;
 
 // maximum number of open files that can be cached
-const MAX_NUM_OPEN_CONTEXT_FILES = 20;
+const MAX_NUM_OPEN_CONTEXT_FILES = 50;
 
 // stores which files are currently open in the IDE, in viewing order
 export const openedFilesLruCache = new QuickLRU<
@@ -17,4 +17,16 @@ export const openedFilesLruCache = new QuickLRU<
 // used in core/core.ts to handle removals from the cache
 export const prevFilepaths = {
   filepaths: [] as string[],
+};
+
+export const updateCacheSize = (size: number) => {
+  openedFilesLruCache.resize(size);
+
+  while (openedFilesLruCache.size > size) {
+    const keys = [...openedFilesLruCache.keys()];
+    const lastKey = keys[keys.length - 1];
+    if (lastKey) {
+      openedFilesLruCache.delete(lastKey);
+    }
+  }
 };

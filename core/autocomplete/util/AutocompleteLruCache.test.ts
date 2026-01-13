@@ -1,19 +1,32 @@
-import AutocompleteLruCache from "./AutocompleteLruCache";
+import type AutocompleteLruCacheType from "./AutocompleteLruCache";
 
-jest.mock("async-mutex", () => {
+(jest as any).unstable_mockModule("async-mutex", () => {
   const acquire = jest.fn().mockResolvedValue(jest.fn());
   return {
     Mutex: jest.fn().mockImplementation(() => ({ acquire })),
   };
 });
-jest.mock("sqlite");
-jest.mock("sqlite3");
+
+(jest as any).unstable_mockModule("sqlite", () => ({
+  open: jest.fn(),
+}));
+
+(jest as any).unstable_mockModule("sqlite3", () => ({
+  default: {
+    Database: jest.fn(),
+  },
+}));
+
+const { open } = await import("sqlite");
+const { default: AutocompleteLruCache } = await import(
+  "./AutocompleteLruCache"
+);
 
 jest.useFakeTimers();
 
 describe("AutocompleteLruCache", () => {
   let mockDb: any;
-  let cache: AutocompleteLruCache;
+  let cache: AutocompleteLruCacheType;
   let currentTime: number;
 
   const createMockDb = () => ({
@@ -638,8 +651,7 @@ describe("AutocompleteLruCache", () => {
     });
 
     it("should return same instance on multiple calls", async () => {
-      const mockOpen = jest.fn().mockResolvedValue(mockDb);
-      jest.doMock("sqlite", () => ({ open: mockOpen }));
+      (open as jest.Mock).mockResolvedValue(mockDb);
 
       const instance1 = await AutocompleteLruCache.get();
       const instance2 = await AutocompleteLruCache.get();
