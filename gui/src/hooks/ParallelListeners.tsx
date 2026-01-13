@@ -44,6 +44,10 @@ function ParallelListeners() {
     (store) => store.profiles.selectedProfileId,
   );
   const hasDoneInitialConfigLoad = useRef(false);
+  const lastModelTitleRef = useRef<string | undefined>(undefined);
+  const hasReasoningEnabled = useAppSelector(
+    (store) => store.session.hasReasoningEnabled,
+  );
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
@@ -85,14 +89,28 @@ function ParallelListeners() {
       }
 
       const chatModel = configResult.config?.selectedModelByRole.chat;
+      const currentModelTitle = chatModel?.title;
+
       const supportsReasoning = modelSupportsReasoning(chatModel);
       const isReasoningDisabled =
         chatModel?.completionOptions?.reasoning === false;
-      dispatch(
-        setHasReasoningEnabled(supportsReasoning && !isReasoningDisabled),
-      );
+
+      const shouldEnableReasoning = supportsReasoning && !isReasoningDisabled;
+
+      if (
+        currentModelTitle !== lastModelTitleRef.current ||
+        hasReasoningEnabled !== shouldEnableReasoning
+      ) {
+        lastModelTitleRef.current = currentModelTitle;
+        dispatch(setHasReasoningEnabled(shouldEnableReasoning));
+      }
     },
-    [dispatch, hasDoneInitialConfigLoad, selectedProfileId],
+    [
+      dispatch,
+      hasDoneInitialConfigLoad,
+      selectedProfileId,
+      hasReasoningEnabled,
+    ],
   );
 
   // Load config from the IDE
