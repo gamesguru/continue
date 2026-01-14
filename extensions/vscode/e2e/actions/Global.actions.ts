@@ -16,6 +16,16 @@ export class GlobalActions {
 
   public static async openTestWorkspace() {
     await VSBrowser.instance.openResources(GlobalActions.defaultFolder);
+
+    // Minimize window to avoid popping up if not in CI
+    if (!process.env.CI) {
+      try {
+        await VSBrowser.instance.driver.manage().window().minimize();
+      } catch (e) {
+        console.log("Failed to minimize window:", e);
+      }
+    }
+
     await new Workbench().executeCommand(
       "Notifications: Clear All Notifications",
     );
@@ -87,7 +97,7 @@ export class GlobalActions {
   static async setNextEditEnabled(enabled: boolean) {
     const workbench = new Workbench();
 
-    await workbench.openCommandPrompt();
+    // await workbench.openCommandPrompt();
     process.env.CONTINUE_E2E_NON_NEXT_EDIT_TEST = "true";
 
     // Initial wait and clear

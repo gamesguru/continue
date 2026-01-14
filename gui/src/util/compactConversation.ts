@@ -31,7 +31,7 @@ export const useCompactConversation = () => {
       dispatch(setCompactionLoading({ index, loading: true }));
       ideMessenger.post("showToast", [
         "info",
-        `Compacting conversation... (Estimated time: ${timeText})`,
+        `Compacting ${history.length} messages... (Estimated time: ${timeText})`,
         "Dismiss", // Adding a button should keep the notification persistent
       ]);
 
